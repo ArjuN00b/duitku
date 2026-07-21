@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test DuitKu - Diagnostic</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #0f0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .pass { color: #0f0; }
+    .fail { color: #f00; }
+    .warn { color: #ff0; }
+    .info { color: #0ff; }
+    pre { background: #111; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🔍 DuitKu Diagnostic Test</h1>
+  <div id="output"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script>
+    const output = document.getElementById('output');
+    
+    function log(msg, type = 'info') {
+      const p = document.createElement('p');
+      p.className = type;
+      p.textContent = msg;
+      output.appendChild(p);
+    }
+
+    function test() {
+      log('='.repeat(60), 'info');
+      log('DuitKu System Diagnostic Test', 'info');
+      log('='.repeat(60), 'info');
+      log('');
+
+      // Test 1: Config loaded
+      log('[TEST 1] Checking config.js...', 'info');
+      if (typeof SUPABASE_CONFIG !== 'undefined') {
+        log('✅ PASS: config.js loaded', 'pass');
+        log(`   URL: ${SUPABASE_CONFIG.url}`, 'info');
+        log(`   Key: ${SUPABASE_CONFIG.anonKey.substring(0, 30)}...`, 'info');
+        
+        if (SUPABASE_CONFIG.url === 'YOUR_SUPABASE_PROJECT_URL') {
+          log('⚠️  WARN: URL belum diisi!', 'warn');
+        }
+        if (SUPABASE_CONFIG.anonKey === 'YOUR_SUPABASE_ANON_KEY') {
+          log('⚠️  WARN: Anon Key belum diisi!', 'warn');
+        }
+      } else {
+        log('❌ FAIL: config.js tidak dimuat!', 'fail');
+      }
+      log('');
+
+      // Test 2: Supabase library
+      log('[TEST 2] Checking Supabase library...', 'info');
+      if (typeof window.supabase !== 'undefined') {
+        log('✅ PASS: Supabase library loaded', 'pass');
+      } else {
+        log('❌ FAIL: Supabase library tidak dimuat!', 'fail');
+      }
+      log('');
+
+      // Test 3: Create client
+      log('[TEST 3] Creating Supabase client...', 'info');
+      try {
+        if (window.supabase && SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey) {
+          const client = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+          log('✅ PASS: Supabase client created', 'pass');
+          
+          // Test 4: Connection test
+          log('');
+          log('[TEST 4] Testing database connection...', 'info');
+          
+          client.from('transactions')
+            .select('count')
+            .limit(1)
+            .then(({ data, error }) => {
+              if (error) {
+                log('❌ FAIL: ' + error.message, 'fail');
+                log('   Kemungkinan: Tabel belum dibuat atau RLS policy bermasalah', 'warn');
+              } else {
+                log('✅ PASS: Koneksi database berhasil!', 'pass');
+                log('   Database siap digunakan', 'info');
+              }
+              
+              log('');
+              log('='.repeat(60), 'info');
+              log('Test selesai. Jika semua PASS, aplikasi siap digunakan.', 'info');
+              log('='.repeat(60), 'info');
+            })
+            .catch(err => {
+              log('❌ FAIL: Connection error - ' + err.message, 'fail');
+              log('');
+              log('='.repeat(60), 'info');
+              log('Test selesai dengan error.', 'fail');
+              log('='.repeat(60), 'info');
+            });
+            
+        } else {
+          log('❌ FAIL: Tidak bisa membuat client (credential tidak lengkap)', 'fail');
+          log('');
+          log('='.repeat(60), 'info');
+          log('Test selesai dengan error.', 'fail');
+          log('='.repeat(60), 'info');
+        }
+      } catch (e) {
+        log('❌ FAIL: ' + e.message, 'fail');
+        log('');
+        log('='.repeat(60), 'info');
+        log('Test selesai dengan error.', 'fail');
+        log('='.repeat(60), 'info');
+      }
+    }
+
+    // Run test
+    setTimeout(test, 500);
+  </script>
+</body>
+</html>

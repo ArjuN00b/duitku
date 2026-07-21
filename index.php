@@ -1,0 +1,369 @@
+<?php
+// DuitKu — Aplikasi Pencatat Keuangan Pribadi (Native PHP + Tailwind CSS)
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DuitKu — Pencatat Keuangan Pribadi</title>
+  
+  <!-- PWA & Mobile Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <!-- Tailwind CSS CDN v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-zinc-100 text-zinc-900 font-sans min-h-screen antialiased select-none">
+
+  <!-- Splash Screen (Appears on Load) -->
+  <div id="splashScreen" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+    <div class="flex flex-col items-center gap-3 animate-pulse">
+      <i class="ph-fill ph-wallet text-6xl text-black"></i>
+      <span class="text-2xl font-bold tracking-tight text-black">DuitKu</span>
+    </div>
+    <div class="absolute bottom-16 flex flex-col items-center gap-2">
+      <i class="ph ph-circle-notch text-2xl text-zinc-400 animate-spin"></i>
+      <span class="text-[10px] tracking-widest text-zinc-400 font-semibold uppercase">Memuat</span>
+    </div>
+  </div>
+
+  <!-- APP CONTAINER -->
+  <div id="app" class="max-w-[480px] mx-auto bg-white min-h-screen relative flex flex-col shadow-sm">
+
+    <!-- TOP HEADER -->
+    <header class="sticky top-0 z-50 h-14 bg-white/95 backdrop-blur-md border-b border-zinc-200 flex items-center justify-center">
+      <div class="flex items-center gap-2">
+        <i class="ph-fill ph-wallet text-2xl text-black"></i>
+        <span class="text-lg font-bold tracking-tight text-black">DuitKu</span>
+      </div>
+    </header>
+
+    <!-- PAGES CONTAINER -->
+    <main class="flex-1 overflow-y-auto pb-24 p-4">
+
+      <!-- ===== PAGE 1: DASHBOARD ===== -->
+      <section class="page block space-y-6" id="pageDashboard">
+
+        <!-- Budget Warning Banner -->
+        <div class="hidden flex items-center gap-2 p-3 rounded-lg text-xs font-medium" id="budgetBanner">
+          <i class="ph ph-warning text-base shrink-0" id="bannerIcon"></i>
+          <span id="bannerText"></span>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="space-y-3">
+          <!-- Main Balance Card -->
+          <div class="p-6 bg-zinc-50 border border-zinc-200 rounded-2xl text-center space-y-1">
+            <p class="text-[11px] font-semibold tracking-wider text-zinc-500 uppercase">Saldo Total</p>
+            <h2 class="text-3xl font-extrabold text-black tracking-tight" id="totalBalance">Rp 0</h2>
+          </div>
+
+          <!-- Income & Expense Row -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+              <div class="flex items-center gap-1.5 text-emerald-600 font-medium">
+                <i class="ph ph-money text-base"></i>
+                <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Pemasukan</span>
+              </div>
+              <p class="text-base font-bold text-emerald-600" id="monthIncome">Rp 0</p>
+            </div>
+            <div class="p-4 bg-zinc-50 border border-zinc-200 rounded-xl space-y-1">
+              <div class="flex items-center gap-1.5 text-red-600 font-medium">
+                <i class="ph ph-trend-down text-base"></i>
+                <span class="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Pengeluaran</span>
+              </div>
+              <p class="text-base font-bold text-red-600" id="monthExpense">Rp 0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expense Category Chart -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-black">Pengeluaran per Kategori</h3>
+          </div>
+          <div class="p-4 bg-zinc-50 border border-zinc-200 rounded-xl min-h-[80px]" id="categoryChart">
+            <p class="text-center text-zinc-400 text-xs py-2" id="emptyChart">Belum ada pengeluaran bulan ini</p>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-black">Transaksi Terbaru</h3>
+            <button class="text-xs font-semibold text-zinc-600 hover:text-black flex items-center gap-1" id="seeAllBtn">
+              Lihat semua <i class="ph ph-arrow-right"></i>
+            </button>
+          </div>
+          <div class="space-y-2" id="recentList">
+            <div class="flex flex-col items-center justify-center py-8 gap-2 text-zinc-400 text-center" id="emptyRecent">
+              <i class="ph ph-tray text-3xl"></i>
+              <p class="text-xs font-semibold text-zinc-600">Belum ada transaksi</p>
+              <span class="text-[11px]">Mulai catat dengan tombol + di bawah</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===== PAGE 2: RIWAYAT ===== -->
+      <section class="page hidden space-y-4" id="pageRiwayat">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-extrabold text-black tracking-tight">Riwayat Transaksi</h2>
+        </div>
+
+        <!-- Stacked Filters -->
+        <div class="space-y-2.5">
+          <select class="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-xs font-medium text-zinc-900 outline-none focus:border-black transition" id="filterMonth"></select>
+          <div class="flex bg-zinc-50 border border-zinc-200 rounded-lg p-1" id="filterType">
+            <button class="flex-1 py-1.5 text-xs font-semibold rounded-md transition bg-black text-white shadow-sm" data-type="all">Semua</button>
+            <button class="flex-1 py-1.5 text-xs font-semibold rounded-md transition text-zinc-500 bg-transparent" data-type="income">Pemasukan</button>
+            <button class="flex-1 py-1.5 text-xs font-semibold rounded-md transition text-zinc-500 bg-transparent" data-type="expense">Pengeluaran</button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2">
+          <i class="ph ph-magnifying-glass text-zinc-400 text-sm"></i>
+          <input type="text" class="bg-transparent border-none text-xs text-zinc-900 w-full outline-none placeholder:text-zinc-400" id="searchInput" placeholder="Cari transaksi..." />
+        </div>
+
+        <!-- Transaction List -->
+        <div class="space-y-2" id="historyList">
+          <div class="flex flex-col items-center justify-center py-8 gap-2 text-zinc-400 text-center">
+            <i class="ph ph-tray text-3xl"></i>
+            <p class="text-xs font-semibold text-zinc-600">Belum ada transaksi</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PAGE 3: BUDGET ===== -->
+      <section class="page hidden space-y-6" id="pageBudget">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-extrabold text-black tracking-tight">Budget Bulanan</h2>
+          <button class="p-2 bg-zinc-50 border border-zinc-200 rounded-lg text-zinc-700 hover:bg-zinc-100 transition" id="setBudgetTotalBtn" title="Set budget total">
+            <i class="ph ph-pencil-simple text-base"></i>
+          </button>
+        </div>
+
+        <!-- Total Budget Ring -->
+        <div class="flex items-center gap-5 bg-zinc-50 border border-zinc-200 rounded-2xl p-5">
+          <div class="relative flex-shrink-0">
+            <canvas id="budgetRingCanvas" width="160" height="160"></canvas>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span class="text-2xl font-extrabold text-black" id="ringPercent">0%</span>
+              <span class="text-[10px] text-zinc-400 font-medium">terpakai</span>
+            </div>
+          </div>
+          <div class="flex-1 space-y-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span>
+              <div>
+                <p class="text-[10px] text-zinc-400 font-medium">Terpakai</p>
+                <p class="text-xs font-bold text-zinc-900" id="budgetUsed">Rp 0</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+              <div>
+                <p class="text-[10px] text-zinc-400 font-medium">Sisa</p>
+                <p class="text-xs font-bold text-zinc-900" id="budgetRemaining">Rp 0</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-zinc-400 shrink-0"></span>
+              <div>
+                <p class="text-[10px] text-zinc-400 font-medium">Total Budget</p>
+                <p class="text-xs font-bold text-zinc-900" id="budgetTotal">Belum diset</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Budgets -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-black">Budget per Kategori</h3>
+          </div>
+          <div class="space-y-2.5" id="categoryBudgetList"></div>
+        </div>
+      </section>
+
+      <!-- ===== PAGE 4: STATISTIK ===== -->
+      <section class="page hidden space-y-6" id="pageStatistik">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-extrabold text-black tracking-tight">Statistik</h2>
+        </div>
+
+        <div>
+          <select class="w-full bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-xs font-medium text-zinc-900 outline-none" id="statMonth"></select>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-center">
+            <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Pemasukan</p>
+            <p class="text-xs font-bold text-emerald-600 mt-1" id="statIncome">Rp 0</p>
+          </div>
+          <div class="p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-center">
+            <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Pengeluaran</p>
+            <p class="text-xs font-bold text-red-600 mt-1" id="statExpense">Rp 0</p>
+          </div>
+          <div class="p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-center">
+            <p class="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Selisih</p>
+            <p class="text-xs font-bold text-zinc-900 mt-1" id="statNet">Rp 0</p>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <h3 class="text-sm font-bold text-black">Komposisi Pengeluaran</h3>
+          <div class="flex items-center gap-4 bg-zinc-50 border border-zinc-200 rounded-xl p-4">
+            <canvas id="donutCanvas" width="180" height="180" class="shrink-0"></canvas>
+            <div class="flex-1 space-y-2 text-xs" id="donutLegend"></div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <h3 class="text-sm font-bold text-black">Tren 6 Bulan Terakhir</h3>
+          <canvas id="barCanvas" width="100%" height="220" class="bg-zinc-50 border border-zinc-200 rounded-xl block"></canvas>
+        </div>
+
+        <div class="space-y-3">
+          <h3 class="text-sm font-bold text-black">Top Pengeluaran</h3>
+          <div class="space-y-2" id="topCategories"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- BOTTOM NAVIGATION (Fixed Centered FAB) -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] h-16 bg-white/95 backdrop-blur-md border-t border-zinc-200 flex items-center justify-around px-2 z-40">
+      <button class="flex flex-col items-center gap-1 flex-1 text-black nav-item" id="navDashboard" data-page="pageDashboard">
+        <i class="ph ph-house text-xl"></i>
+        <span class="text-[10px] font-semibold">Beranda</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 flex-1 text-zinc-400 hover:text-black nav-item" id="navRiwayat" data-page="pageRiwayat">
+        <i class="ph ph-list-dashes text-xl"></i>
+        <span class="text-[10px] font-semibold">Riwayat</span>
+      </button>
+      
+      <!-- Perfectly Circular Centered Floating Action Button -->
+      <div class="relative w-14 h-full flex justify-center items-center">
+        <button class="absolute -top-5 w-14 h-14 rounded-full bg-black text-white flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition" id="fabBtn" title="Tambah transaksi">
+          <i class="ph ph-plus text-2xl font-bold"></i>
+        </button>
+      </div>
+
+      <button class="flex flex-col items-center gap-1 flex-1 text-zinc-400 hover:text-black nav-item" id="navBudget" data-page="pageBudget">
+        <i class="ph ph-chart-pie-slice text-xl"></i>
+        <span class="text-[10px] font-semibold">Budget</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 flex-1 text-zinc-400 hover:text-black nav-item" id="navStatistik" data-page="pageStatistik">
+        <i class="ph ph-chart-bar text-xl"></i>
+        <span class="text-[10px] font-semibold">Statistik</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- ===== MODAL: TAMBAH / EDIT TRANSAKSI ===== -->
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center hidden" id="txnModal">
+    <div class="w-full max-w-[480px] bg-white rounded-t-3xl p-5 pb-8 max-h-[90vh] overflow-y-auto space-y-4 animate-in slide-in-from-bottom duration-200">
+      <div class="w-10 h-1 bg-zinc-200 rounded-full mx-auto"></div>
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-black" id="modalTitle">Tambah Transaksi</h3>
+        <button class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-black" id="modalClose">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <!-- Type Toggle -->
+      <div class="flex bg-zinc-100 p-1 rounded-xl">
+        <button class="flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition text-zinc-500" id="typeIncome" data-type="income">
+          <i class="ph ph-money text-base"></i> Pemasukan
+        </button>
+        <button class="flex-1 py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition text-zinc-500" id="typeExpense" data-type="expense">
+          <i class="ph ph-trend-down text-base"></i> Pengeluaran
+        </button>
+      </div>
+
+      <!-- Amount Input -->
+      <div class="flex items-center gap-2 border border-zinc-200 rounded-xl p-3.5 focus-within:border-black transition">
+        <span class="text-lg font-bold text-zinc-400">Rp</span>
+        <input type="text" id="amountInput" class="bg-transparent border-none text-2xl font-extrabold text-black w-full outline-none" placeholder="0" inputmode="numeric" />
+      </div>
+
+      <!-- Budget Warning -->
+      <div class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium p-3 rounded-lg flex items-center gap-2" id="modalBudgetWarn">
+        <i class="ph ph-warning text-base shrink-0"></i> Transaksi ini akan melebihi budget kategori!
+      </div>
+
+      <!-- Description -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">Keterangan</label>
+        <input type="text" id="descInput" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl text-sm p-3 outline-none focus:border-black transition" placeholder="Contoh: Gaji / Makan siang" maxlength="60" />
+      </div>
+
+      <!-- Category Grid -->
+      <div class="space-y-1.5" id="categoryGroup">
+        <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">Kategori</label>
+        <div class="grid grid-cols-4 gap-2" id="categoryGrid"></div>
+      </div>
+
+      <!-- Date -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-zinc-500 uppercase tracking-wider">Tanggal</label>
+        <input type="date" id="dateInput" class="w-full bg-zinc-50 border border-zinc-200 rounded-xl text-sm p-3 outline-none focus:border-black transition" />
+      </div>
+
+      <button class="w-full py-3.5 bg-black text-white rounded-xl text-sm font-bold shadow-md hover:bg-zinc-800 transition mt-2" id="saveBtn">Simpan</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: SET BUDGET ===== -->
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center hidden" id="budgetModal">
+    <div class="w-full max-w-[480px] bg-white rounded-t-3xl p-5 pb-8 max-h-[90vh] overflow-y-auto space-y-4">
+      <div class="w-10 h-1 bg-zinc-200 rounded-full mx-auto"></div>
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-black" id="budgetModalTitle">Set Budget</h3>
+        <button class="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 hover:text-black" id="budgetModalClose">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-zinc-500" id="budgetModalLabel">Budget bulan ini (Rp)</label>
+        <div class="flex items-center gap-2 border border-zinc-200 rounded-xl p-3.5 focus-within:border-black transition">
+          <span class="text-lg font-bold text-zinc-400">Rp</span>
+          <input type="text" id="budgetAmountInput" class="bg-transparent border-none text-2xl font-extrabold text-black w-full outline-none" placeholder="0" inputmode="numeric" />
+        </div>
+      </div>
+      <button class="w-full py-3.5 bg-black text-white rounded-xl text-sm font-bold shadow-md hover:bg-zinc-800 transition" id="saveBudgetBtn">Simpan Budget</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
