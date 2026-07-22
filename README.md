@@ -12,20 +12,25 @@
 
 ## ✨ Fitur Utama
 
-- **📊 Dashboard Interaktif**: 
+- **📊 Dashboard Interaktif**:
+  <img width="670" height="903" alt="image" src="https://github.com/user-attachments/assets/2a643e86-129e-405c-b902-f13b60711354" />
+
   - Tampilan Saldo Total, Total Pemasukan, dan Pengeluaran bulan berjalan.
   - Grafik donat dinamis untuk komposisi pengeluaran per kategori.
   - Grafik batang tren keuangan (Pemasukan vs Pengeluaran) periode **Juli s.d. Desember 2026**.
 - **📋 Riwayat Terkelompok**:
+  <img width="676" height="901" alt="image" src="https://github.com/user-attachments/assets/1e444c1f-00f5-4bb8-a54e-acae0e51f2a2" />
+
   - Riwayat transaksi dikelompokkan rapi berdasarkan kategori masing-masing.
   - Diurutkan dari tanggal transaksi terbaru (newest first).
   - Dilengkapi fitur pencarian (*live search*) dan filter jenis transaksi (Semua, Pemasukan, Pengeluaran).
 - **🎯 Pengaturan Budget Bulanan**:
+<img width="653" height="893" alt="image" src="https://github.com/user-attachments/assets/299b003e-2990-4ec2-8f81-e093e4ef5735" />
+
   - Tetapkan budget pengeluaran bulanan secara global maupun per kategori.
   - Progress bar dinamis berwarna untuk memantau sisa budget.
   - Banner peringatan otomatis di Dashboard jika pengeluaran telah mencapai 80% atau melebihi budget yang ditentukan.
-- **✨ Animasi Splash Screen**:
-  - Tampilan pembuka beranimasi lembut dengan logo DuitKu dan indikator memuat sebelum masuk ke aplikasi utama.
+
 - **📱 Dukungan PWA (Offline-First)**:
   - Dapat di-install langsung di layar utama handphone (iOS & Android) seperti aplikasi native.
   - Berjalan lancar tanpa internet menggunakan caching Service Worker.
@@ -85,5 +90,3 @@ Anda tidak memerlukan server khusus (seperti Apache/XAMPP) jika hanya ingin memb
 Proyek ini dilisensikan di bawah lisensi MIT. Silakan gunakan, modifikasi, dan distribusikan secara bebas.
 
 ---
-
-*Dibuat dengan ❤️ untuk membantu mengontrol pengeluaran keuangan bulanan Anda.*
